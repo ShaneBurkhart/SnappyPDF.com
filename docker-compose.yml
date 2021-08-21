@@ -1,0 +1,56 @@
+web:
+    image: shaneburkhart/snappy-pdf-api
+    links:
+        - pg
+        - redis
+        - couchdb
+    env_file:
+        - user.env
+    restart: always
+    command: "node server.js"
+
+pg:
+    image: postgres:13
+    environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_DB=mydb
+    volumes:
+        - /data/pg:/var/lib/postgresql/data
+    restart: always
+
+couchdb:
+    image: couchdb:3.1.0
+    volumes:
+        - /data/couchdb:/opt/couchdb/data
+        - /data/log/couchdb:/opt/couchdb/var/log
+    env_file:
+        - user.env
+    restart: always
+
+redis:
+    image: redis:3.2
+    restart: always
+    command: "redis-server --save '' --appendonly no"
+
+nginx:
+    image: nginx:1.17
+    ports:
+        - "3001:3001"
+    volumes:
+        - ./nginx.conf:/etc/nginx/nginx.conf:ro
+        - ./public:/public:ro
+    links:
+        - web
+    restart: always
+
+datadog-agent:
+    image: datadog/agent:latest
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        - /proc/:/host/proc/:ro
+        - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+        - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
+    env_file:
+        - datadog.env
+    restart: always

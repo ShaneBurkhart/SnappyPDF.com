@@ -1,0 +1,26 @@
+"/api/documents/:documentUuid":
+  get: { action: documents.getDocument, allow: { anonymous: } }
+
+"/api/documents":
+  post: 
+    action: documents.createDocument
+    allow: { anonymous: }
+    form:
+      s3Url: {}
+      filename: {}
+
+"/api/documents/presigned":
+  post: 
+    action: documents.generatePresignedURL
+    allow: { anonymous: }
+    form:
+      filename: {}
+      mime: {}
+
+"/api/_webhooks/documents":
+  post:
+    action: documents.pipelineWebhooks
+    allow: { anonymous: }
+    form:
+      type: {}
+      data: {}

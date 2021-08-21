@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+    api:
+        image: shaneburkhart/snappy-pdf-api
+        volumes: 
+            - ./packages/api:/app 
+            - ./packages/lambda-queue:/lambda-queue 
+        networks: [ nginx, redis, pg ]
+        depends_on: [ pg, redis ]
+        env_file: [ user.env ]
+        command: "npx nodemon -e js,json,yaml -w server.js -w bouncer/* -w controllers/* -w models/* -w util/* -w config/* --exec 'npm run build && npm run start'"
+    
+    lambda_queue_processor:
+        image: shaneburkhart/snappy-pdf-lambda-queue
+        volumes: [ ./packages/lambda-queue:/app ]
+        networks: [ split_pdf, pdf_to_image, redis ]
+        depends_on: [ redis ]
+        env_file: [ user.env ]
+        command: "node -e \"const queue = require('./queue.js'); queue.startProcessors();\""
+
+    lambda_queue_proxy:
+        image: shaneburkhart/snappy-pdf-lambda-queue
+        volumes: [ ./packages/lambda-queue:/app ]
+        networks: [ redis, lambda_queue_proxy ]
+        depends_on: [ redis ]
+        env_file: [ user.env ]
+        command: "node -e \"const queue = require('./queue.js'); queue.startServer();\""
+
+    split_pdf:
+        image: shaneburkhart/snappy-pdf-lambda
+        volumes: [ ./packages/lambda:/var/task ]
+        networks: [ split_pdf, nginx, lambda_queue_proxy ]
+        env_file: [ user.env ]
+        command: "split_pdf.split"
+
+    pdf_to_image:
+        image: shaneburkhart/snappy-pdf-lambda
+        networks: [ pdf_to_image, nginx, lambda_queue_proxy ]
+        env_file: [ user.env ]
+        volumes: [ ./packages/lambda:/var/task ]
+        command: "pdf_to_image.to_image"
+
+    react:
+        image: shaneburkhart/snappy-pdf-react
+        volumes:  
+            - ./packages/react:/app 
+            - ./packages/api:/snappy-pdf-api 
+            - ./packages/annotation-tool:/snappy-pdf-annotation-tool 
+            - ./packages/tailwind:/snappy-pdf-tailwind
+        networks: [ nginx_react ]
+        env_file: [ user.env ]
+        command: "npm run start"
+    
+    tailwind:
+        image: shaneburkhart/snappy-pdf-tailwind
+        volumes: [ ./packages/tailwind:/app, ./packages/react:/react ]
+        env_file: [ user.env ]
+        command: "npm start"
+
+    pg:
+        image: postgres:13
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=mydb
+        networks: [ pg ]
+        volumes:
+            - ./data/pg:/var/lib/postgresql/data
+
+    redis:
+        image: redis:3.2
+        networks: [ redis ]
+        command: "redis-server --save '' --appendonly no"
+
+    nginx:
+        image: nginx:1.17
+        ports: [ "3000:3000" ]
+        depends_on: [ api ]
+        volumes:
+            - type: bind
+              source: ./nginx.dev.conf
+              target: /etc/nginx/nginx.conf
+              read_only: true
+        networks:
+            nginx: { aliases: [ api ] }
+            nginx_react: { aliases: [ react ] }
+
+networks:
+    nginx:
+    nginx_react:
+    lambda_queue_proxy:
+    redis:
+    pg:
+    split_pdf:
+    pdf_to_image:

@@ -1,0 +1,35 @@
+{
+  "name": "snappy-pdf-tailwind",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/tailwind.css",
+  "dependencies": {
+    "@tailwindcss/forms": "^0.3.2",
+    "tailwindcss": "^2.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "build": "npx tailwindcss -i ./src/tailwind.css -o ./dist/tailwind.css",
+    "start": "npx tailwindcss -i ./src/tailwind.css -o ./dist/tailwind.css --watch"
+  },
+  "repository": {
+    "type": "git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+  },
+  "homepage": "/",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
