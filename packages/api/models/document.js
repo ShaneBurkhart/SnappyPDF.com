@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
   Document.associate = function(models) {
     // associations can be defined here
+    Document.hasMany(models.Sheet)
   };
 
   Document.beforeValidate(doc => {

@@ -15,7 +15,10 @@ def get_webhook_url():
     return "{}/api/_webhooks/documents".format(get_host())
 
 def notify_split_pdf_completion(object_id):
-    json = { 'type': "SPLIT_PDF_COMPLETED", 'data': { 'objectId': object_id } }
+    json = { 
+        'type': "SPLIT_PDF_COMPLETED", 
+        'data': { 'objectId': object_id } 
+    }
     res = requests.post(get_webhook_url(), json=json, headers=headers)
     print(res.text)
     return True
@@ -34,9 +37,9 @@ def notify_sheet_to_image_completion(object_id, page_index, sheet_width, sheet_h
         'type': "SHEET_TO_IMAGE_COMPLETED", 
         'data': {
             'objectId': object_id,
-            'page_index': page_index, 
-            'sheet_width': sheet_width, 
-            'sheet_height': sheet_height
+            'pageIndex': page_index, 
+            'sheetWidth': sheet_width, 
+            'sheetHeight': sheet_height
         }
     }
     res = requests.post(get_webhook_url(), json=json, headers=headers)

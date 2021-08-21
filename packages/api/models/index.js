@@ -15,6 +15,7 @@ if (process.env.NODE_ENV === "production") sequelize.options.logging = false
 
 const MODELS = [
   require("./document"),
+  require("./sheet"),
 ]
 
 MODELS.forEach(fn => {

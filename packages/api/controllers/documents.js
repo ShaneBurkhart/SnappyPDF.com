@@ -9,7 +9,7 @@ const AWS_REGION = process.env.AWS_REGION;
 
 exports.getDocument = async (req, res) => {
 	const { documentUuid } = req.form
-	const document = await models.Document.findOne({ where: { uuid: documentUuid }})
+	const document = await models.Document.findOne({ where: { uuid: documentUuid }, include: models.Sheet })
 	if (!document) return res.status(422).send("Document not found")
 	res.json(document)
 }
@@ -57,7 +57,34 @@ exports.generatePresignedURL = (req, res) => {
 	})
 }
 
-exports.pipelineWebhooks = (req, res) => {
+exports.pipelineWebhooks = async (req, res) => {
+	const { type, data } = req.form
+
 	console.log("FORM", req.form)
+
+	switch (type) {
+		case "SPLIT_PDF_COMPLETED":
+			// Nothing to do 
+			break
+		case "PAGE_COUNT":
+			await models.Document.update({ pageCount: data.pageCount }, { where: { uuid: data.objectId }})
+			break
+		case "SHEET_TO_IMAGE_COMPLETED":
+			const doc = await models.Document.findOne({ where: { uuid: data.objectId }, include: models.Sheet })
+			if (!doc) return res.status(422).send("")
+
+			const sheets = doc.Sheets || []
+			const pageIndex = data.pageIndex
+			const sheet = sheets.find(s => s.index === pageIndex)
+			if (sheet) return res.status(422).send("")
+
+			await doc.createSheet({ index: pageIndex, width: data.sheetWidth, height: data.sheetHeight, DocumentUuid: doc.uuid })
+			break
+
+		default: 
+			console.log("Invalid event type to webhook", type)
+			res.status(422).send("Invalid type for webhook event")
+	}
+
 	res.send("Completed")
 }
