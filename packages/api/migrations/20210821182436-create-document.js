@@ -11,7 +11,7 @@ module.exports = {
       uuid: {
         allowNull: false,
         unique: true,
-        type: Sequelize.UUID,
+        type: Sequelize.STRING,
       },
       filename: {
         type: Sequelize.STRING

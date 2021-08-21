@@ -1,11 +1,12 @@
 'use strict';
-const uuid = require("uuid").v4;
+const ShortUniqueId = require('short-unique-id');
+const uid = new ShortUniqueId();
 
 module.exports = (sequelize, DataTypes) => {
   const Document = sequelize.define('Document', {
     uuid: {
       allowNull: false, 
-      type: DataTypes.UUID,
+      type: DataTypes.STRING,
     },
     s3Url: {
       allowNull: false, 
@@ -22,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   Document.beforeValidate(doc => {
-    doc.uuid = uuid()
+    doc.uuid = uid()
   });
 
   return Document;
