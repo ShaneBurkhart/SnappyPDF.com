@@ -20,10 +20,10 @@ def to_image(event, context):
 
     obj = s3.Object(bucket, key)
     memoryFile = obj.get()['Body'].read()
-    images = convert_from_bytes(memoryFile)
+    images = convert_from_bytes(memoryFile, dpi=100)
 
     buf = BytesIO()
-    images[0].save(buf, format="PNG")
+    images[0].convert('P', palette=Image.ADAPTIVE, colors=256).save(buf, format="PNG", optimize=True, quality=80)
 
     image = Image.open(buf)
     sheet_width, sheet_height = image.size
